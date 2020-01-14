@@ -227,7 +227,7 @@ def getRandomState(state, player):
    '''Return a random next state which includes a random flip and a random placement.  Need to get all possibilities before choosing a random one.'''
    #print("")
    #print("----------------------------------")
-   print(state)
+   #print(state)
    indicesOP = indicesOfOtherPlayer(state, player)
    flipIndices = getValidFlipLocations(state, indicesOP)
    #print("FlipIndices: " + str(flipIndices))
@@ -256,7 +256,7 @@ def getRandomState(state, player):
          
       newstate = deepcopy(flipstate)
       newstate[indices[index]] = p
-      return newstate
+      return newstate, None
 
    else:
       indices = getIndices(state, 0)
@@ -268,23 +268,29 @@ def getRandomState(state, player):
          p = [2, -2][iplayer]
       newstate = deepcopy(state)
       newstate[index] = p
-      return newstate
+      return newstate, index
       
          
 def montecarlo(state, player):
    '''Make random decisions all the way to an end state'''
    turns = 0
+   firstMove = True
+   firstMoveIndex = -1
    while not endState(state):
-      state = getRandomState(state, player)
+      state, fmi = getRandomState(state, player)
       player = getNextPlayer(player)
       #print(state)
       turns += 1
+      if firstMove:
+         firstMoveIndex = fmi 
+      firstMove = False
       
-   print("++++++++++++++++++++++++++++++++")
-   print(state)
-   print("WINNERS")
-   print(getWinners(state))
-   print(str(turns) + " turns")
+   #print("++++++++++++++++++++++++++++++++")
+   #print(state)
+   #print("WINNERS")
+   #print(getWinners(state))
+   #print(str(turns) + " turns")
+   return firstMoveIndex, turns
 
 player = 1
 print("TESTING")
@@ -293,7 +299,9 @@ print("TESTING")
       
       
 state = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-montecarlo(state, player)
+for i in range(100):
+   moveIndex, turns = montecarlo(state, player)
+   print(str(moveIndex) + ", " + str(turns))
 #state = [1, 1, 0, 0, 2, 0, 0, 2, 2, 0, 0, -1, 0, 0, 0, -1]
 #state = [-1, 2, 0, 0, 1, 2, -1, 1, -1, 2, 2, -1, -2, 2, 1, 0]
 #print(state)
