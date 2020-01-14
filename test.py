@@ -1,8 +1,34 @@
 from tree import Tree
 from copy import deepcopy
+from random import randint
 
 NUMROWS = 4
 NUMCOLS = 4
+
+filters = [[1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+           [0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
+           [0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0],
+           [0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0],
+           [0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0],
+           [0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0],
+           [0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0],
+           [0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1],
+           [1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0],
+           [0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0],
+           [0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0],
+           [0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0],
+           [0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+           [0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0],
+           [0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0],
+           [0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
+           [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0],
+           [0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0],
+           [0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0],
+           [0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+           [0,0,1,0,0,1,0,0,1,0,0,0,0,0,0,0],
+           [0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,0],
+           [0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0],
+           [0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0]]
 
 def getIndices(L, val):
    '''Given a list L return a list of indices where we see the value val.
@@ -64,7 +90,9 @@ def getValidFlipLocations(S, L):
    for val in L:
       adjacents = getAdjacentIndices(S, val)
       #print("Adjacents: " + str(adjacents))
-      D[val] = [k for k in adjacents if S[k] == 0]
+      junk = [k for k in adjacents if S[k] == 0]
+      if len(junk) > 0:
+         D[val] = junk
    return D
 
 def getFlipState(state, i, iflip):
@@ -89,9 +117,9 @@ def constructTree(rootPlayer, maxdepth=-1):
       #print("")
       flipIndices = getValidFlipLocations(state, indicesOP)
       if len(flipIndices) > 0:
-         for i in flipIndices.keys():
-            for iflip in flipIndices[i]:
-               flipstate = getFlipState(state, i, iflip)
+         for key in flipIndices.keys():
+            for iflip in flipIndices[key]:
+               flipstate = getFlipState(state, key, iflip)
                indices = getIndices(flipstate, 0)
                for index in indices:
                   if player == 1:
@@ -126,24 +154,209 @@ def constructTree(rootPlayer, maxdepth=-1):
 
    recurse(tree.root, rootPlayer)
 
+
+def matchFilters(state):
+   '''Check the state against all of the filters.  Return True if there is a match'''
+   #print(state)
+   correctFilters = {}
+   for f in filters:
+      #print(f)
+      result = []
+      #print(len(f))
+      for i in range(len(f)):
+         if f[i] == 1:
+            #print(str(f[i]) + ", " + str(state[i]))
+            result.append(state[i])
+      #print("RESULT = " + str(result))
+      result = list(set(result))
+      #print("RESULT = " + str(result))
+      if len(result) == 1:
+         if result[0] != 0:
+            if result[0] not in correctFilters:
+               correctFilters[result[0]] = [f]
+            else:
+               correctFilters[result[0]].append(f)
+
+   return correctFilters
    
-def montecarlo():
+def endState(state):
+   '''Return True if this state is an end state'''
+   #print("CHECK END STATE")
+   filterDict = matchFilters(state)
+   #print("FDict: " + str(filterDict))
+   #print(len(filterDict) == 0)
+   if len(filterDict) != 0:
+      for key in filterDict.keys():
+         for f in filterDict[key]:
+            #print(f)
+            indices = getIndices(f, 1)
+            #print(indices)
+            F = getValidFlipLocations(state, indices)
+            #print(F)
+            is_end_state = True
+            for k in F.keys():
+               if len(F[k]) > 0:
+                  is_end_state = False
+            if is_end_state:
+               return True
+   else:
+      #print("Hello")
+      indices = getIndices(state, 0)
+      #print(indices)
+      if len(indices) == 0:
+         return True
+   return False
+   
+def getWinners(state):
+   '''Assuming the state is an end state, get a list of winners.  Can have the same winner multiple times if the winner has multiple winning lines.'''
+   filterDict = matchFilters(state)
+   if len(filterDict) != 0:
+      print(filterDict)
+      winners = {}
+      for key in filterDict.keys():
+         if abs(key) not in winners:
+            winners[abs(key)] = 1
+         else:
+            winners[abs(key)] += 1
+      return winners
+
+   return None
+
+   
+def getRandomState(state, player):
+   '''Return a random next state which includes a random flip and a random placement.  Need to get all possibilities before choosing a random one.'''
+   #print("")
+   #print("----------------------------------")
+   print(state)
+   indicesOP = indicesOfOtherPlayer(state, player)
+   flipIndices = getValidFlipLocations(state, indicesOP)
+   #print("FlipIndices: " + str(flipIndices))
+   
+   if len(flipIndices) > 0:
+      #print(flipIndices)
+      keys = flipIndices.keys()
+      #print(keys)
+      ikey = randint(0, len(keys)-1)
+      #print(ikey)
+      #print(flipIndices[keys[ikey]])
+      iflip = randint(0, len(flipIndices[keys[ikey]])-1)
+      flipindex = flipIndices[keys[ikey]][iflip]
+      #print("flip "+str(keys[ikey]) + " to " + str(flipindex))
+      flipstate = getFlipState(state, keys[ikey], flipindex)
+      #print(flipstate)
+      #print("==============================")
+      indices = getIndices(flipstate, 0)
+      #print("Zero indices: " + str(indices))
+      index = randint(0, len(indices)-1)
+      iplayer = randint(0,1)
+      if player == 1:
+         p = [1,-1][iplayer]
+      else:
+         p = [2,-2][iplayer]
+         
+      newstate = deepcopy(flipstate)
+      newstate[indices[index]] = p
+      return newstate
+
+   else:
+      indices = getIndices(state, 0)
+      index = randint(0, len(indices)-1)
+      iplayer = randint(0,1)
+      if player == 1:
+         p = [1, -1][iplayer]
+      else:
+         p = [2, -2][iplayer]
+      newstate = deepcopy(state)
+      newstate[index] = p
+      return newstate
+      
+         
+def montecarlo(state, player):
    '''Make random decisions all the way to an end state'''
-   pass
+   turns = 0
+   while not endState(state):
+      state = getRandomState(state, player)
+      player = getNextPlayer(player)
+      #print(state)
+      turns += 1
+      
+   print("++++++++++++++++++++++++++++++++")
+   print(state)
+   print("WINNERS")
+   print(getWinners(state))
+   print(str(turns) + " turns")
 
-
-   
-startState = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-tree = Tree()
-tree.root.data = startState
-
-player = 1 #value for player 2 is 2
-constructTree(player, 4)
-n = tree.walk(0, tree.root)
-print(n)
+player = 1
+print("TESTING")
+#state = [1,-1,2,1,1,2,1,2,1,-2,2,2,0,0,0,0]
+#print(endState(state))
+      
+      
+state = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+montecarlo(state, player)
+#state = [1, 1, 0, 0, 2, 0, 0, 2, 2, 0, 0, -1, 0, 0, 0, -1]
+#state = [-1, 2, 0, 0, 1, 2, -1, 1, -1, 2, 2, -1, -2, 2, 1, 0]
+#print(state)
+#print(endState(state))
+#state = getRandomState(state, player)
+#player = getNextPlayer(player)
+#print(state)
 
 
 """
+state = getRandomState(state, player)
+player = getNextPlayer(player)
+print(state)
+
+state = getRandomState(state, player)
+player = getNextPlayer(player)
+print(state)
+
+state = getRandomState(state, player)
+player = getNextPlayer(player)
+print(state)
+
+state = getRandomState(state, player)
+player = getNextPlayer(player)
+print(state)
+print(endState(state))
+
+state = getRandomState(state, player)
+player = getNextPlayer(player)
+print(state)
+print(endState(state))
+
+state = getRandomState(state, player)
+player = getNextPlayer(player)
+print(state)
+print(endState(state))
+
+state = getRandomState(state, player)
+player = getNextPlayer(player)
+print(state)
+print(endState(state))
+
+state = getRandomState(state, player)
+player = getNextPlayer(player)
+print(state)
+print(endState(state))
+
+state = getRandomState(state, player)
+player = getNextPlayer(player)
+print(state)
+print(endState(state))
+
+#tree = Tree()
+#tree.root.data = startState
+
+#player = 1 #value for player 2 is 2
+#montecarlo(startState, player)
+#constructTree(player, 4)
+#n = tree.walk(0, tree.root)
+#print(n)
+
+
+
 tree = Tree()
 tree.addNode(tree.root, 9)
 tree.addNode(tree.root, 10)
