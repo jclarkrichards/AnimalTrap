@@ -1,13 +1,17 @@
-"""State for a Tic Tac Toe game.  Will contain 'X' and 'O' and -1 or -2"""
 from copy import deepcopy
+from constants import *
+import utils
 
 class GameState(object):
-    def __init__(self, state):
+    def __init__(self, data):
         '''state is a list'''
-        self.state = state
-        self.winner = None #can also be 'X' or 'O'
-        
+        #state=[0,0,0,0,-2,0,0,0,0,-1,0,0,1,0,2,0]
+        self.data = data
+        self.winner = None
+
+    """
     def __eq__(self, state):
+        '''Does state equal this state?'''
         s1 = []
         s2 = []
         for val in state.state:
@@ -22,28 +26,93 @@ class GameState(object):
             else:
                 s2.append(val)                
         return s1 == s2
-    
+    """
     def __repr__(self):
-        '''this is specifically for a tic tac toe state'''
-        XO = []
-        for val in self.state:
-            if val is not 'X' and val is not 'O':
-                XO.append(' ')
+        '''How we want to print the state to the screen'''
+        S = []
+        for val in self.data:
+            if val == 0:
+                S.append(' ')
             else:
-                XO.append(val)
-        return "%s|%s|%s\n-+-+-\n%s|%s|%s\n-+-+-\n%s|%s|%s" % tuple(XO)
+                S.append(val)
+        return "%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n" % tuple(S)
 
     def copy(self):
         '''Return a fresh copy of the state so we can modify it without effecting this one'''
         return deepcopy(self)
-    
-    def isEndState(self, filters):
-        '''If this state is an end state, return True.  Otherwise False'''
-        for f in filters:
-            if self.filter(f):
+
+    def getFlipState(self, iplace, iflip):
+        '''Given a state, flip piece at index i to index iflip'''
+        newstate = self.copy()
+        newstate.data[iflip] = newstate.data[iplace] * -1
+        newstate.data[iplace] = 0
+        return newstate #type GameState
+
+    def endState(self):
+        '''Return True if this state is an end state'''
+        #print("CHECK END STATE")                                                            
+        filterDict = self.matchFilters()
+        if len(filterDict) != 0:
+            for key in filterDict.keys():
+                for f in filterDict[key]:
+                    indices = utils.getIndices(f, 1)
+                    F = utils.getValidFlipLocations(self.data, indices)
+                    is_end_state = True
+                    for k in F.keys():
+                        if len(F[k]) > 0:
+                            is_end_state = False
+                    if is_end_state:
+                        return True
+        else:
+            indices = utils.getIndices(self.data, 0)
+            if len(indices) == 0:
                 return True
         return False
 
+    def matchFilters(self):
+        '''Check the state against all of the filters.  Return True if there is a match on any of the filters.'''
+        #print(state)                                                                        
+        correctFilters = {}
+        for f in filters:
+            #print(f)                                                                         
+            result = []
+            #print(len(f))                                                                    
+            for i in range(len(f)):
+                if f[i] == 1:
+                    #print(str(f[i]) + ", " + str(state[i]))                                    
+                    result.append(self.data[i])
+            #print("RESULT = " + str(result))                                                 
+            result = list(set(result))
+            #print("RESULT = " + str(result))                                                 
+            if len(result) == 1:
+                if result[0] != 0:
+                    if result[0] not in correctFilters:
+                        correctFilters[result[0]] = [f]
+                    else:
+                        correctFilters[result[0]].append(f)
+
+        return correctFilters
+
+    def getWinners(self):
+        '''Assuming the state is an end state, get a list of winners.  Can have the same winner multiple times if the winner has multiple winning lines.'''
+        filterDict = self.matchFilters()
+        if len(filterDict) != 0:
+            winners = {}
+            for key in filterDict.keys():
+                if abs(key) not in winners:
+                    winners[abs(key)] = 1
+                else:
+                    winners[abs(key)] += 1
+            return winners
+        return None
+
+
+
+
+
+
+
+    """
     def setWinner(self, filters):
         '''Return the winner of this state: 'X' or 'O' or None if tie or no winners'''
         if self.winnerX(filters):
@@ -88,12 +157,13 @@ class GameState(object):
             self.state[index] = val
             return True
         return False
-
+    """
+    
     
 class StateTemplate(object):
-    def __init__(self, state):
-        self.state = state
+    def __init__(self):
+        self.state = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 
     def __repr__(self):
         '''this is specifically for a tic tac toe state'''
-        return "%s|%s|%s\n-+-+-\n%s|%s|%s\n-+-+-\n%s|%s|%s" % tuple(self.state)
+        return "%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n" % tuple(self.state)

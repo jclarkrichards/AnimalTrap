@@ -1,0 +1,42 @@
+"""Utils describes methods that are not specific to any particular game.  These are general methods that could be applied to many different applications."""
+from constants import *
+
+#L=[1,5,4,1,0,1] val=1, return [0,3,5]
+def getIndicesFromValue(L, val):
+    indices = []
+    for i in range(len(L)):
+        if L[i] in val:
+            indices.append(i)
+    return indices
+
+#L=[1,5,4,1,0,1] val=[1,5], return [0,1,3,5]
+def getIndices(L, val):
+   '''Given a list L return a list of indices where we see the value val.      
+   val can be a single value or a list of values'''
+   indices = []
+   if type(val) is list:
+       for i in range(len(L)):
+           if L[i] in val:
+               indices.append(i)
+   else:
+      for i in range(len(L)):
+         if L[i] == val:
+            indices.append(i)
+   return indices
+
+#Assuming a square grid:  if index=5, return 1 if NUMROWS=4
+def getRow(index):
+   '''Given an index, return the row number'''
+   return index / NUMROWS
+
+def getColumn(index):
+    '''Given an index, return the column number'''
+   return index % NUMCOLS
+
+def getIndexFromRowCol(row, column):
+   '''Given a row and column value, return the index'''
+   #print("r="+str(row) + ", c="+str(column))                                  
+   if row >= 0 and row < NUMROWS:
+      if column >= 0 and column < NUMCOLS:
+         return row*NUMCOLS + column
+   return None

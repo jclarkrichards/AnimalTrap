@@ -1,15 +1,11 @@
-from tictactoe import TicTacToe
-from minimax import Minimax
+from gamerules import AnimalTrap
 
-game = TicTacToe()
-game.xplayer = True #Human is X
-game.oplayer = False #Human is O
-firstTurn = True
+game = AnimalTrap()
+game.setPlayers()
+print(game.template)
+print("==================")
 
 while not game.gameover:
-    print("")
-    print(game.template)
-    print("=======")
     if game.xturn:
         print("X PLAYER")
         if game.xplayer:
