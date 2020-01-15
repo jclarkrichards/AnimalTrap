@@ -211,7 +211,7 @@ def getWinners(state):
    '''Assuming the state is an end state, get a list of winners.  Can have the same winner multiple times if the winner has multiple winning lines.'''
    filterDict = matchFilters(state)
    if len(filterDict) != 0:
-      print(filterDict)
+      #print(filterDict)
       winners = {}
       for key in filterDict.keys():
          if abs(key) not in winners:
@@ -275,14 +275,14 @@ def montecarlo(state, player):
    '''Make random decisions all the way to an end state'''
    turns = 0
    firstMove = True
-   firstMoveIndex = -1
+   firstMoveState = [] 
    while not endState(state):
       state, fmi = getRandomState(state, player)
       player = getNextPlayer(player)
       #print(state)
       turns += 1
       if firstMove:
-         firstMoveIndex = fmi 
+         firstMoveState = state 
       firstMove = False
       
    #print("++++++++++++++++++++++++++++++++")
@@ -290,8 +290,12 @@ def montecarlo(state, player):
    #print("WINNERS")
    #print(getWinners(state))
    #print(str(turns) + " turns")
-   return firstMoveIndex, turns
+   winners = getWinners(state)
+   return firstMoveState, turns, winners
 
+
+
+#================================================================
 player = 1
 print("TESTING")
 #state = [1,-1,2,1,1,2,1,2,1,-2,2,2,0,0,0,0]
@@ -299,16 +303,65 @@ print("TESTING")
       
       
 state = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-for i in range(100):
-   moveIndex, turns = montecarlo(state, player)
-   print(str(moveIndex) + ", " + str(turns))
-#state = [1, 1, 0, 0, 2, 0, 0, 2, 2, 0, 0, -1, 0, 0, 0, -1]
-#state = [-1, 2, 0, 0, 1, 2, -1, 1, -1, 2, 2, -1, -2, 2, 1, 0]
-#print(state)
-#print(endState(state))
-#state = getRandomState(state, player)
-#player = getNextPlayer(player)
-#print(state)
+
+while not endState(state):
+   allstates = []
+   allturns = []
+   allwinners = []
+   for i in range(500):
+      moveState, turns, winners = montecarlo(state, player)
+      allstates.append(moveState)
+      allturns.append(turns)
+      allwinners.append(winners)
+      #print(str(moveIndex) + ", " + str(turns))
+
+   #print("Player " + str(player))
+   #print(allstates)
+   #print("")
+   #print(allturns)
+   #print("")
+   #print(allwinners)
+
+   allstatesFiltered = []
+   allturnsFiltered = []
+   allwinnersFiltered = []
+
+   for i in range(len(allwinners)):
+      if player == 1: otherplayer = 2
+      else: otherplayer = 1
+
+      if allwinners[i] is not None:
+         if otherplayer not in allwinners[i].keys():
+            allwinnersFiltered.append(allwinners[i])
+            allstatesFiltered.append(allstates[i])
+            allturnsFiltered.append(allturns[i])
+
+   #print("")
+   #print("")
+   #print(allstatesFiltered)
+   #print("")
+   #print(allturnsFiltered)
+   #print("")
+   #print(allwinnersFiltered)
+
+
+   Dindices = {}
+   for i in range(len(allturnsFiltered)):
+      if allturnsFiltered[i] not in Dindices:
+         Dindices[allturnsFiltered[i]] = [i]
+      else:
+         Dindices[allturnsFiltered[i]].append(i)
+
+   #print("")
+   #print(Dindices)
+
+   lowestKey = min(Dindices.keys())
+   print("Player "+ str(player)+"'s best move can win in " + str(lowestKey) + " moves")
+   state = allstatesFiltered[Dindices[lowestKey][0]]
+   print(state)
+   if player == 1: player = 2
+   else: player = 1
+
 
 
 """
