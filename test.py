@@ -60,9 +60,12 @@ def constructTree(rootPlayer, maxdepth=-1):
 print("TESTING")
 #state = [1,-1,2,1,1,2,1,2,1,-2,2,2,0,0,0,0]
 #print(endState(state))
-game = AnimalTrap()      
+game = AnimalTrap()
+game2 = AnimalTrap()
 print(game.state.endState())
 print(game.state.getWinners())
+
+print(game.state == game2.state)
 
 game.getNextState(game.state)
 

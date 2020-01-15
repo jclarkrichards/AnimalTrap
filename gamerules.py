@@ -16,7 +16,7 @@ class AnimalTrap(object):
         self.player2Human = False
         self.gameover = False
         self.template = StateTemplate()
-        self.startState = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        self.startState = [1,2,0,2,0,0,-2,0,1,1,2,1,2,1,1,2]
         self.state = GameState(self.startState)
         
     def setPlayers(self):
@@ -104,7 +104,7 @@ class AnimalTrap(object):
         #results = []
         template = {"turns":0, "state":None, "winners":[]}
         if not self.state.endState():
-            for i in range(10):
+            for i in range(1000):
                 self.setPlayer()
                 state = startState.copy()
                 firstState, turns, winners = self.montecarlo(state)
@@ -129,7 +129,45 @@ class AnimalTrap(object):
         
     def analyzeData(self, results):
         '''Determine the next best move from the data.  Can get more data by calling getNextState again'''
-        pass
+        self.setPlayer()
+        print("ANALYZE Best move for Player " + str(self.player))
+        stateDict = {}
+        winsDict = {}
+        num = 0
+        states = [k['state'] for k in results]
+        #print(len(states))
+        template = {'player1':0, 'player2':0}
+        #print(states) 
+        for i in range(len(results)):
+            #print(results[i]['state'])
+            #print(results[i]['state'] in states)
+            if results[i]['state'] not in stateDict.values():
+                stateDict[num] = results[i]['state']
+                winsDict[num] = deepcopy(template)
+                winsDict[num]['player1'] += results[i]['winners'][1]
+                winsDict[num]['player2'] += results[i]['winners'][2]
+                num += 1
+            else:
+                n = -1
+                for key in stateDict.keys():
+                    if stateDict[key] == results[i]['state']:
+                        n = key
+                        break
+                #print("Found at " + str(n))
+                #winsDict[n] = deepcopy(template)
+                winsDict[n]['player1'] += results[i]['winners'][1]
+                winsDict[n]['player2'] += results[i]['winners'][2]
+                
+
+        print("DICTIONARIES")
+        print(stateDict)
+        print("")
+        print(winsDict)
+        #example:  {index: {turns:{p1:#wins, p2:#wins}}}
+        #{0: { 9 : {1:3, 2:5}, 4: {1:2, 2:0}}, 1: {5:{1:0, 2:2}}}
+        #for i in range(len(results)):
+        #    pass
+
         
     """
     def setupTree(self):

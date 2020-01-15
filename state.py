@@ -4,29 +4,15 @@ import utils
 
 class GameState(object):
     def __init__(self, data):
-        '''state is a list'''
-        #state=[0,0,0,0,-2,0,0,0,0,-1,0,0,1,0,2,0]
+        '''data is a list: [1,0,0,-1,2,-2,0,...]'''
         self.data = data
         self.winner = None
 
-    """
+    
     def __eq__(self, state):
         '''Does state equal this state?'''
-        s1 = []
-        s2 = []
-        for val in state.state:
-            if val is not 'X' and val is not 'O':
-                s1.append(' ')
-            else:
-                s1.append(val)
-
-        for val in self.state:
-            if val is not 'X' and val is not 'O':
-                s2.append(' ')
-            else:
-                s2.append(val)                
-        return s1 == s2
-    """
+        return self.data == state.data
+    
     def __repr__(self):
         '''How we want to print the state to the screen'''
         S = []
@@ -35,7 +21,7 @@ class GameState(object):
                 S.append(' ')
             else:
                 S.append(val)
-        return "%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n" % tuple(S)
+        return "\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n" % tuple(S)
 
     def copy(self):
         '''Return a fresh copy of the state so we can modify it without effecting this one'''
@@ -50,7 +36,6 @@ class GameState(object):
 
     def endState(self):
         '''Return True if this state is an end state'''
-        #print("CHECK END STATE")                                                            
         filterDict = self.matchFilters()
         if len(filterDict) != 0:
             for key in filterDict.keys():
@@ -71,19 +56,14 @@ class GameState(object):
 
     def matchFilters(self):
         '''Check the state against all of the filters.  Return True if there is a match on any of the filters.'''
-        #print(state)                                                                        
         correctFilters = {}
         for f in filters:
-            #print(f)                                                                         
             result = []
-            #print(len(f))                                                                    
             for i in range(len(f)):
                 if f[i] == 1:
-                    #print(str(f[i]) + ", " + str(state[i]))                                    
                     result.append(self.data[i])
-            #print("RESULT = " + str(result))                                                 
             result = list(set(result))
-            #print("RESULT = " + str(result))                                                 
+
             if len(result) == 1:
                 if result[0] != 0:
                     if result[0] not in correctFilters:
@@ -96,15 +76,17 @@ class GameState(object):
     def getWinners(self):
         '''Assuming the state is an end state, get a list of winners.  Can have the same winner multiple times if the winner has multiple winning lines.'''
         filterDict = self.matchFilters()
+        winners = {1:0, 2:0}
         if len(filterDict) != 0:
-            winners = {}
+            #winners = {1:0, 2:0}
             for key in filterDict.keys():
-                if abs(key) not in winners:
-                    winners[abs(key)] = 1
-                else:
-                    winners[abs(key)] += 1
-            return winners
-        return None
+                winners[abs(key)] += 1
+                #if abs(key) not in winners:
+                #    winners[abs(key)] = 1
+                #else:
+                #    winners[abs(key)] += 1
+        return winners
+        #return None
 
 
 
@@ -166,4 +148,4 @@ class StateTemplate(object):
 
     def __repr__(self):
         '''this is specifically for a tic tac toe state'''
-        return "%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n" % tuple(self.state)
+        return "\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n-+-+-+-\n%s|%s|%s|%s\n" % tuple(self.state)
