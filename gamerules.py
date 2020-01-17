@@ -8,6 +8,8 @@ import utils
 from state import *
 from random import randint
 
+"""Maybe the first few turns the computer takes are random.  If the computer makes the first move, it does not matter where that move is really.  Maybe after 4 moves we do the monte carlo.  When we are down to just a fews moves left we can start making trees."""
+
 class AnimalTrap(object):
     def __init__(self):
         self.tree = None
@@ -16,7 +18,9 @@ class AnimalTrap(object):
         self.player2Human = False
         self.gameover = False
         self.template = StateTemplate()
-        self.startState = [1,2,0,2,0,0,-2,0,1,1,2,1,2,1,1,2]
+        #self.startState = [1,2,0,2,0,0,-2,0,1,1,2,1,2,1,1,2]
+        #self.startState = [1,0,0,2,0,0,0,0,0,1,1,1,-2,0,2,2]
+        self.startState = [2,0,0,2,0,0,0,0,0,1,0,0,0,1,0,0]
         self.state = GameState(self.startState)
         
     def setPlayers(self):
@@ -26,6 +30,10 @@ class AnimalTrap(object):
         human = raw_input("Is Player 2 human? (y/n) ")
         if human == 'y': self.player2Human = True
 
+    def getOtherPlayer(self):
+        if self.player == 1: return 2
+        return 1
+    
     def getNextPlayer(self):
         '''Players switch back and forth'''
         if self.player == 1: self.player = 2
@@ -101,10 +109,9 @@ class AnimalTrap(object):
 
     def getNextState(self, startState, results=[]):
         '''Perform monte carlo a bunch of times to try and find the next best state.  We can add to the results if we need more data.'''
-        #results = []
         template = {"turns":0, "state":None, "winners":[]}
         if not self.state.endState():
-            for i in range(1000):
+            for i in range(300):
                 self.setPlayer()
                 state = startState.copy()
                 firstState, turns, winners = self.montecarlo(state)
@@ -121,31 +128,22 @@ class AnimalTrap(object):
             
         self.analyzeData(results)
         
-        #print(allTurns)
-        #print("")
-        #print(allWinners)
-        #print("")
-        #print(allFirstStates)
-        
     def analyzeData(self, results):
         '''Determine the next best move from the data.  Can get more data by calling getNextState again'''
         self.setPlayer()
         print("ANALYZE Best move for Player " + str(self.player))
+        fullDict = {}
         stateDict = {}
-        winsDict = {}
         num = 0
         states = [k['state'] for k in results]
-        #print(len(states))
-        template = {'player1':0, 'player2':0}
-        #print(states) 
         for i in range(len(results)):
-            #print(results[i]['state'])
-            #print(results[i]['state'] in states)
             if results[i]['state'] not in stateDict.values():
                 stateDict[num] = results[i]['state']
-                winsDict[num] = deepcopy(template)
-                winsDict[num]['player1'] += results[i]['winners'][1]
-                winsDict[num]['player2'] += results[i]['winners'][2]
+                fullDict[num] = {}
+                if results[i]['winners'][1] > 0 or results[i]['winners'][2] > 0:
+                    fullDict[num][results[i]['turns']] = {1:0, 2:0}
+                    fullDict[num][results[i]['turns']][1] += results[i]['winners'][1]
+                    fullDict[num][results[i]['turns']][2] += results[i]['winners'][2]
                 num += 1
             else:
                 n = -1
@@ -153,21 +151,72 @@ class AnimalTrap(object):
                     if stateDict[key] == results[i]['state']:
                         n = key
                         break
-                #print("Found at " + str(n))
-                #winsDict[n] = deepcopy(template)
-                winsDict[n]['player1'] += results[i]['winners'][1]
-                winsDict[n]['player2'] += results[i]['winners'][2]
+
+                if results[i]['turns'] not in fullDict[n]:
+                    if results[i]['winners'][1] > 0 or results[i]['winners'][2] > 0:
+                        fullDict[n][results[i]['turns']] = {1:0, 2:0}
+                        fullDict[n][results[i]['turns']][1] += results[i]['winners'][1]
+                        fullDict[n][results[i]['turns']][2] += results[i]['winners'][2]
+                else:
+                    fullDict[n][results[i]['turns']][1] += results[i]['winners'][1]
+                    fullDict[n][results[i]['turns']][2] += results[i]['winners'][2]
                 
 
         print("DICTIONARIES")
         print(stateDict)
         print("")
-        print(winsDict)
+        print("")
+        allturnsSorted = []
+        for key in fullDict.keys():
+            print(str(key) + " : " + str(fullDict[key]))
+            print("")
+            allturnsSorted += fullDict[key].keys()
+            
+        #print("All turns unsorted: " + str(allturnsSorted))
+        allturnsSorted = list(set(allturnsSorted))
+        allturnsSorted.sort()
+        print("All turn sorted: " + str(allturnsSorted))
         #example:  {index: {turns:{p1:#wins, p2:#wins}}}
         #{0: { 9 : {1:3, 2:5}, 4: {1:2, 2:0}}, 1: {5:{1:0, 2:2}}}
         #for i in range(len(results)):
         #    pass
 
+        #Start with the smallest turns, in any of those does the player win without the other player winning?
+        tempStateIndices = []
+        turn = allturnsSorted.pop(0)
+        other = self.getOtherPlayer()
+        for key in fullDict.keys():
+            if turn in fullDict[key].keys():
+                #print(key)
+                #print(fullDict[key])
+                if fullDict[key][turn][self.player] > fullDict[key][turn][other]:
+                    tempStateIndices.append((key, turn))
+
+        if len(tempStateIndices) == 0:
+            print("Need to either get more data or check the next value in allturnsSorted")
+            while len(tempStateIndices) == 0 and len(allturnsSorted) > 0:
+                print("status check: " + str(len(tempStateIndices)))
+                turn = allturnsSorted.pop(-1)
+                print("Checking turn " + str(turn))
+                print(allturnsSorted)
+                for key in fullDict.keys():
+                    if turn in fullDict[key].keys():
+                        print("found one at " + str(key)+" : " + "1:"+str(fullDict[key][turn][self.player]) + ", 2:"+str(fullDict[key][turn][other]))
+                        if fullDict[key][turn][self.player] < fullDict[key][turn][other]:
+                            tempStateIndices.append((key, turn))
+        else:
+            print("Found some, good!")
+
+        print("DID WE DO GOOD????")
+        print("What are the chances that we still have an empty array here?")
+        
+        print(tempStateIndices)
+        print(self.state)
+
+
+
+
+        
         
     """
     def setupTree(self):
