@@ -49,7 +49,7 @@ def getIndexFromRowCol(row, column):
     return None
 
 #if val is 7, return [3, 6, 11]
-def getAdjacentIndices(S, val):
+def getAdjacentIndices(S, val): #don't need S
     '''Return a list of adjacent indices to val in S'''
     row = getRow(val)
     column = getColumn(val)

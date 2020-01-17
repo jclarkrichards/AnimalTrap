@@ -37,11 +37,14 @@ class GameState(object):
     def endState(self):
         '''Return True if this state is an end state'''
         filterDict = self.matchFilters()
+        #print("3 in a row found: " + str(filterDict))
         if len(filterDict) != 0:
             for key in filterDict.keys():
                 for f in filterDict[key]:
                     indices = utils.getIndices(f, 1)
+                    #print(indices)
                     F = utils.getValidFlipLocations(self.data, indices)
+                    #print(F)
                     is_end_state = True
                     for k in F.keys():
                         if len(F[k]) > 0:

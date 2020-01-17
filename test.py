@@ -61,14 +61,39 @@ print("TESTING")
 #state = [1,-1,2,1,1,2,1,2,1,-2,2,2,0,0,0,0]
 #print(endState(state))
 game = AnimalTrap()
-game2 = AnimalTrap()
-print(game.state.endState())
-print(game.state.getWinners())
+#print(game.state.endState())
+#print(game.state.getWinners())
 
-print(game.state == game2.state)
+print("........................")
+game.setNextStateAuto()
+print("Chosen state")
+print(game.state)
 
-game.getNextState(game.state)
+print("........................")
+#game.state = state
+game.setNextStateAuto()
+print("Chosen state")
+print(game.state)
 
+print("........................")
+#game.state = state
+game.setNextStateAuto()
+print("Chosen state")
+print(game.state)
+
+print("........................")
+#game.state = state
+game.setNextStateAuto()
+print("Chosen state")
+print(game.state)
+
+
+
+
+print(game.state)
+print("")
+print("")
+print("")
 #state = game.state.copy()
 
 #game.setPlayer()

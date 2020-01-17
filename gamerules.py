@@ -20,8 +20,9 @@ class AnimalTrap(object):
         self.template = StateTemplate()
         #self.startState = [1,2,0,2,0,0,-2,0,1,1,2,1,2,1,1,2]
         #self.startState = [1,0,0,2,0,0,0,0,0,1,1,1,-2,0,2,2]
-        self.startState = [2,0,0,2,0,0,0,0,0,1,0,0,0,1,0,0]
-        self.state = GameState(self.startState)
+        #startState = [-1,-1,0,-2,-1,0,2,0,1,0,0,-2,0,0,0,0]
+        startState = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        self.state = GameState(startState)
         
     def setPlayers(self):
         '''Set which players are human'''
@@ -60,20 +61,20 @@ class AnimalTrap(object):
         flipIndices = utils.getValidFlipLocations(state.data, indicesOP)
 
         if len(flipIndices) > 0:
-            #print(flipIndices)                                                               
+            #print(flipIndices)                                                             
             keys = flipIndices.keys()
-            #print(keys)                                                                      
+            #print(keys)                                                                    
             ikey = randint(0, len(keys)-1)
-            #print(ikey)                                                                      
-            #print(flipIndices[keys[ikey]])                                                   
+            #print(ikey)                                                                    
+            #print(flipIndices[keys[ikey]])                                                 
             iflip = randint(0, len(flipIndices[keys[ikey]])-1)
             flipindex = flipIndices[keys[ikey]][iflip]
             #print("flip "+str(keys[ikey]) + " to " + str(flipindex))
             flipstate = state.getFlipState(keys[ikey], flipindex)
-            #print(flipstate)                                                                 
-            #print("==============================")                                          
+            #print(flipstate)                                                               
+            #print("==============================")                                        
             indices = utils.getIndices(flipstate.data, 0)
-            #print("Zero indices: " + str(indices))                                           
+            #print("Zero indices: " + str(indices))                                         
             index = randint(0, len(indices)-1)
             iplayer = randint(0,1)
             p = PLAYERVALUES[self.player][iplayer]
@@ -94,44 +95,73 @@ class AnimalTrap(object):
         turns = 0
         firstMove = True
         firstMoveState = []
-        
+        #print("montecarlo")
+        #print(state)
         while not state.endState():
             state = self.getRandomState(state)
-            print("Player " + str(self.player))
-            print(state)
+            #print("Player " + str(self.player))
+            #print(">>>>>>>>>>>>>>>>")
+            #print(state)
             self.getNextPlayer()
             turns += 1
             if firstMove:
-                firstMoveState = state
+                firstMoveState = deepcopy(state)
             firstMove = False
         winners = state.getWinners()
+        #print(".............")
+        #print(firstMoveState)
         return firstMoveState, turns, winners
 
-    def getNextState(self, startState, results=[]):
+    def setNextStateAuto(self):
         '''Perform monte carlo a bunch of times to try and find the next best state.  We can add to the results if we need more data.'''
+        results = []
+        print("Starting results")
+        print(results)
+        print("START STATE")
+        print(self.state)
+        self.setPlayer()
+        print("Player " + str(self.player))
         template = {"turns":0, "state":None, "winners":[]}
         if not self.state.endState():
-            for i in range(300):
+            for i in range(1000):
+                #print("---------------------------------------")
                 self.setPlayer()
-                state = startState.copy()
+                state = self.state.copy()
+                #print("STATE")
+                #print(state)
+                #print("---------------")
                 firstState, turns, winners = self.montecarlo(state)
+                #print("next possible state")
+                #print(firstState)
+                #print("++++++++++++++++++++++++++++++++++++++++")
                 temp = deepcopy(template)
                 temp["turns"] = turns
-                temp["state"] = firstState
+                temp["state"] = deepcopy(firstState)
                 temp["winners"] = winners
                 results.append(temp)
 
+        #print("RESULTS")
+        
+        #print(results)
         #analyze the data to determine the next best state
-        for i in range(len(results)):
-            print(results[i])
-            print("")
-            
+        #for i in range(len(results)):
+        #    print(results[i])
+        #    print("")
+        #return results
         self.analyzeData(results)
+        #print("THIS IS THE NEW STATE")
+        #print(results[0]["state"].data)
+        #print("+++++++++++++++++++++")
+        #self.state = GameState(results[0]["state"].data)
         
     def analyzeData(self, results):
         '''Determine the next best move from the data.  Can get more data by calling getNextState again'''
+        #print("RAW RESULTS")
+        #print(results)
+        #print("")
+        #print("")
         self.setPlayer()
-        print("ANALYZE Best move for Player " + str(self.player))
+        #print("ANALYZE Best move for Player " + str(self.player))
         fullDict = {}
         stateDict = {}
         num = 0
@@ -162,20 +192,20 @@ class AnimalTrap(object):
                     fullDict[n][results[i]['turns']][2] += results[i]['winners'][2]
                 
 
-        print("DICTIONARIES")
-        print(stateDict)
-        print("")
-        print("")
+        #print("DICTIONARIES")
+        #print(stateDict)
+        #print("")
+        #print("")
         allturnsSorted = []
         for key in fullDict.keys():
-            print(str(key) + " : " + str(fullDict[key]))
-            print("")
+            #print(str(key) + " : " + str(fullDict[key]))
+            #print("")
             allturnsSorted += fullDict[key].keys()
             
         #print("All turns unsorted: " + str(allturnsSorted))
         allturnsSorted = list(set(allturnsSorted))
         allturnsSorted.sort()
-        print("All turn sorted: " + str(allturnsSorted))
+        #print("All turn sorted: " + str(allturnsSorted))
         #example:  {index: {turns:{p1:#wins, p2:#wins}}}
         #{0: { 9 : {1:3, 2:5}, 4: {1:2, 2:0}}, 1: {5:{1:0, 2:2}}}
         #for i in range(len(results)):
@@ -193,28 +223,106 @@ class AnimalTrap(object):
                     tempStateIndices.append((key, turn))
 
         if len(tempStateIndices) == 0:
-            print("Need to either get more data or check the next value in allturnsSorted")
+            #print("Need to either get more data or check the next value in allturnsSorted")
             while len(tempStateIndices) == 0 and len(allturnsSorted) > 0:
-                print("status check: " + str(len(tempStateIndices)))
+                #print("status check: " + str(len(tempStateIndices)))
                 turn = allturnsSorted.pop(-1)
-                print("Checking turn " + str(turn))
-                print(allturnsSorted)
+                #print("Checking turn " + str(turn))
+                #print(allturnsSorted)
                 for key in fullDict.keys():
                     if turn in fullDict[key].keys():
-                        print("found one at " + str(key)+" : " + "1:"+str(fullDict[key][turn][self.player]) + ", 2:"+str(fullDict[key][turn][other]))
+                        #print("found one at " + str(key)+" : " + "1:"+str(fullDict[key][turn][self.player]) + ", 2:"+str(fullDict[key][turn][other]))
                         if fullDict[key][turn][self.player] < fullDict[key][turn][other]:
                             tempStateIndices.append((key, turn))
-        else:
-            print("Found some, good!")
+        #else:
+        #    print("Found some, good!")
 
-        print("DID WE DO GOOD????")
-        print("What are the chances that we still have an empty array here?")
+        #print("DID WE DO GOOD????")
+        #print("What are the chances that we still have an empty array here?")
         
         print(tempStateIndices)
-        print(self.state)
+        #print(self.state)
+        if len(tempStateIndices) > 0:
+            print("Choosing state " + str(tempStateIndices[0][0]))
+            #For now just choose the first entry so that we can play the game
+            #We want to be able to choose the best entry though
+            print("OLD STATE")
+            print(self.state)
+            print("CHOOSING STATE")
+            print(stateDict[tempStateIndices[0][0]])
+            #self.state = GameState(stateDict[tempStateIndices[0][0]].data)
+            self.state = stateDict[tempStateIndices[0][0]]
+            print("CURRENT STATE")
+            print(self.state)
+        else:
+            print("UHHHHHHHHHH!  Now what???")
 
+    def checkEndGame(self):
+        '''Sets gameover variable to True if our current state is an end state'''
+        if self.state.endState(): self.gameover = True
 
+    def nextTurn(self):
+        raw_input("Hit any key to continue... ")
+        
+    def getHumanChoice(self):
+        '''Return a tuple that describes a move (flip index (from), flip index (to), place index, 1 or -1).  Need to add checks to make sure not making illegal moves.'''
+        flipfrom = None
+        flipto = None
+        if len([k for k in self.state.data if k == 0]) < 16:
+            valid = False
+            while not valid:
+                flipfrom = int(raw_input("Flip from index: "))
+                if self.state.data[flipfrom] == 0:
+                    #if abs(self.state.data[flipfrom]) == self.player:
+                    print("NOT VALID!  Choose again!")
+                else:
+                    if abs(self.state.data[flipfrom]) != self.player:
+                        valid = True
+                    else:
+                        print("Can't flip own piece!  Try again!")
+                
+            valid = False
+            while not valid:
+                adjacents = utils.getAdjacentIndices(self.state, flipfrom)
+                print("Valid choices: " + str(adjacents))
+                flipto = int(raw_input("Flip to index: "))
+                if flipto not in adjacents:
+                    print("NOT VALID!  Choose again!")
+                else:
+                    valid = True
+                
+        valid = False
+        while not valid:
+            place = int(raw_input("Place own piece on index: "))
+            if self.state.data[place] != 0:
+                if place != flipfrom:
+                    print("NOT VALID!  Choose again!")
+                else:
+                    valid = True
+            else:
+                if flipto is not None:
+                    if place != flipto:
+                        valid = True
+                    else:
+                        print("NOT VALID!  Choose again!")
+                else:
+                    valid = True
+                
+        side = raw_input("Negative or positive? (n/p) ")
+        if side == 'n': return (flipfrom, flipto, place, -1)
+        return (flipfrom, flipto, place, 1)
 
+    def setState(self, values):
+        '''Set the current state based on a tuple of 4 values'''
+        flipfrom, flipto, place, side = values
+        if flipfrom is not None and flipto is not None:
+            othervalue = self.state.data[flipfrom]
+            self.state.data[flipfrom] = 0
+            self.state.data[flipto] = othervalue * -1
+        self.state.data[place] = self.player * side
+        #print(self.state)
+
+    
 
         
         

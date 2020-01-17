@@ -6,37 +6,24 @@ print(game.template)
 print("==================")
 
 while not game.gameover:
-    if game.xturn:
-        print("X PLAYER")
-        if game.xplayer:
-            if firstTurn:
-                index = game.humanFirstTurn()
-                game.startState[index] = 'X'
-                game.setupTree()
-            else:
-                game.humanTurn('X')
+    print(game.state)
+    print("Player " + str(game.player) + " move")
+    if game.player == 1:
+        if game.player1Human:
+            values = game.getHumanChoice()
+            game.setState(values)
         else:
-            if firstTurn:
-                index = 4
-                game.startState[index] = 'X'
-                game.setupTree()
-            else:
-                minimax = Minimax(game.tree)
-                index = minimax.findBestMove('X')
-                game.makeMoveAI(index)
+            game.setNextStateAuto()
     else:
-        print("O PLAYER")
-        if game.oplayer:
-            game.humanTurn('O')
+        if game.player2Human:
+            values = game.getHumanChoice()
+            game.setState(values)
         else:
-            minimax = Minimax(game.tree)
-            index = minimax.findBestMove('O')
-            game.makeMoveAI(index)
-            
-    print(game.tree.root.data)
-    firstTurn = False
-    if game.checkEndGame():
-        game.gameover = True
-    game.xturn = not game.xturn
+            game.setNextStateAuto()
+
+    
+    game.checkEndGame()
+    game.setPlayer()    
+    game.nextTurn()
 
 print("GAME OVER MAN!")
