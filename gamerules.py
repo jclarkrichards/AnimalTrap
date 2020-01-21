@@ -220,6 +220,7 @@ class AnimalTrap(object):
                 #print(key)
                 #print(fullDict[key])
                 if fullDict[key][turn][self.player] > fullDict[key][turn][other]:
+                    print("Getting a jump on the win")
                     tempStateIndices.append((key, turn))
 
         if len(tempStateIndices) == 0:
@@ -233,6 +234,7 @@ class AnimalTrap(object):
                     if turn in fullDict[key].keys():
                         #print("found one at " + str(key)+" : " + "1:"+str(fullDict[key][turn][self.player]) + ", 2:"+str(fullDict[key][turn][other]))
                         if fullDict[key][turn][self.player] < fullDict[key][turn][other]:
+                            print("Just making sure you don't win")
                             tempStateIndices.append((key, turn))
         #else:
         #    print("Found some, good!")
@@ -243,17 +245,17 @@ class AnimalTrap(object):
         print(tempStateIndices)
         #print(self.state)
         if len(tempStateIndices) > 0:
-            print("Choosing state " + str(tempStateIndices[0][0]))
+            #print("Choosing state " + str(tempStateIndices[0][0]))
             #For now just choose the first entry so that we can play the game
             #We want to be able to choose the best entry though
-            print("OLD STATE")
-            print(self.state)
-            print("CHOOSING STATE")
-            print(stateDict[tempStateIndices[0][0]])
+            #print("OLD STATE")
+            #print(self.state)
+            #print("CHOOSING STATE")
+            #print(stateDict[tempStateIndices[0][0]])
             #self.state = GameState(stateDict[tempStateIndices[0][0]].data)
             self.state = stateDict[tempStateIndices[0][0]]
-            print("CURRENT STATE")
-            print(self.state)
+            #print("CURRENT STATE")
+            #print(self.state)
         else:
             print("UHHHHHHHHHH!  Now what???")
 

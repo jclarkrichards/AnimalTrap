@@ -24,6 +24,8 @@ while not game.gameover:
     
     game.checkEndGame()
     game.setPlayer()    
-    game.nextTurn()
+    #game.nextTurn()
 
 print("GAME OVER MAN!")
+print("")
+print(game.state)
